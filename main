@@ -1,0 +1,66 @@
+clear
+
+n_pattern=[2 2;3 2;4 2;5 2;6 2;7 2;8 2;9 2;2 3;3 3;4 3;5 3;6 3;7 3;8 3;9 3;2 4;3 4;4 5;5 5;6 6;7 6;8 7;9 7;2 8;3 8;4 8;5 8;6 8;7 8;8 8;9 8;2 9;3 9;4 9;5 9;6 9;7 9;8 9;9 9;];
+t_pattern=[2 2;2 3;2 4;2 5;2 6;2 7;2 8;2 9;3 2;3 3;3 4;3 5;3 6;3 7;3 8;3 9;3 5;3 6;4 5;4 6;5 5;5 6;6 5;6 6;7 5;7 6;8 5;8 6;9 5;9 6;];
+u_pattern=[2 2;2 3;2 8;2 9;3 2;3 3;3 8;3 9;4 2;4 3;4 8;4 9;5 2;5 3;5 8;5 9;6 2;6 3;6 8;6 9;7 2;7 3;7 8;7 9;8 2;8 3;8 4;8 5;8 6;8 7;8 8;8 9;9 2;9 3;9 4;9 5;9 6;9 7;9 8;9 9;];
+
+m_pattern=[2 2;3 2;4 2;5 2;6 2;7 2;8 2;9 2;2 3;3 3;4 3;5 3;6 3;7 3;8 3;9 3;2 8;3 8;4 8;5 8;6 8;7 8;8 8;9 8;2 9;3 9;4 9;5 9;6 9;7 9;8 9;9 9;2 4;3 4;2 7;3 7;4 5;5 5;6 5;4 6;5 6;6 6;7 9;];
+s_pattern=[2 2;2 3;2 4;2 5;2 6;2 7;2 8;2 9;3 2;3 3;3 4;3 5;3 6;3 7;3 8;3 9;8 2;8 3;8 4;8 5;8 6;8 7;8 8;8 9;9 2;9 3;9 4;9 5;9 6;9 7;9 8;9 9;4 2;4 3;5 2;5 3;5 4;6 4;5 5;6 5;5 6;6 6;5 7;6 7;6 8;7 8;6 9;7 9;];
+e_pattern=[2 2;2 3;2 4;2 5;2 6;2 7;2 8;2 9;3 2;3 3;3 4;3 5;3 6;3 7;3 8;3 9;8 2;8 3;8 4;8 5;8 6;8 7;8 8;8 9;9 2;9 3;9 4;9 5;9 6;9 7;9 8;9 9;4 2;5 2;6 2;7 2;4 3;5 3;6 3;7 3;5 4;5 5;5 6;6 4;6 5;6 6;];
+
+Fig_name={'N_black','N_gray','N_red','T_black','T_gray','T_red','U_black','U_gray','U_red','M_black','M_gray','M_red','S_black','S_gray','S_red','E_black','E_gray','E_red'};
+Patterns={n_pattern,t_pattern,u_pattern,m_pattern,s_pattern,e_pattern};
+N=10;
+N_noise=5;
+N_total=200;
+fg_folds=50;
+
+address_1='C:\Users\Administrator\Dropbox\temp work\Paper2\SI-noise image-NTU MSE\new codes\new one\Figure-mix2\';
+
+%%%%%parameter for integration
+
+a=4.21;b=-0.277;k=0.9626;
+lamda=0.7059;
+P=0.8955;L=1.7409;
+N=10;
+D=[31 28 25 22 19 16 13 10 7 4 1];%distance matrix, unit: mm
+%ampli=zeros(80,N+1);%amplitude matrix;
+
+%%%%%%
+
+noise_pixel(Patterns,Fig_name,address_1,N,N_noise,N_total,fg_folds);
+
+%%%%%%
+
+str0=[address_1,'*.png'];
+namelist = dir(str0);
+[sn,sm]=size(namelist);
+for j=1:sn;
+str1=address_1;
+str2=namelist(j).name;
+addres=[str1,str2];
+lett_pattn(:,:,:,j)=imread(addres);
+end
+
+%%%%%%%%%%%%%%%%%%%%
+
+K=1;%%%%the integration level (n-VH)
+
+ampli1= spatial_integration(lett_pattn,a,b,k,lamda,P,L,D,N,N_noise,N_total,fg_folds,K);	%%sensory fusion data
+
+[ampli2 ampli3]= nonintegration(lett_pattn,lamda,P,L,N,N_noise,N_total,fg_folds);  %%the two unimodal data
+
+%ampli4=ampli2(:,1:100)+ampli3(:,1:100);  %% sum of the two unimodal sensory data
+
+%amli4(:,101)=ampli2(:,101); %% label of the two unimodal sensory data
+
+%%%%%%%%%%%%%%%%%%%%%
+
+Rec1=sensory_integration_neural_computing(ampli1);
+
+Rec2=sensory_integration_neural_computing(ampli2);
+Rec3=sensory_integration_neural_computing(ampli3);
+
+%Rec4=sensory_integration_neural_computing(ampli4);
+
+rec=[Rec1 Rec2 Rec3];
