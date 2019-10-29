@@ -1,0 +1,51 @@
+%%%%%%%%%this function is to caculate the mapping result by visual-haptic fusion
+
+function amp = spatial_integration(lett_pattn,a,b,k,lamda,P,L,D,N,N_noise,N_total,fg_folds,K);%%K represents the integration level (n-VH)
+
+[s1,s2,s3,s4]=size(lett_pattn);
+N_num=N_total/N_noise;
+
+n=1;
+
+for i=1:s4;
+for u=1:N;
+    for v=1:N;
+        if lett_pattn((u-1)*fg_folds+1,(v-1)*fg_folds+1,1,i)==255 && lett_pattn((u-1)*fg_folds+1,(v-1)*fg_folds+1,2,i)==0;
+           imag(u,v)=k*(P+L);
+        end
+        if lett_pattn((u-1)*fg_folds+1,(v-1)*fg_folds+1,1,i)==127;
+           imag(u,v)=k*(P+lamda*L);
+        end
+        if lett_pattn((u-1)*fg_folds+1,(v-1)*fg_folds+1,1,i)==0;
+           imag(u,v)=P;
+        end
+        if lett_pattn((u-1)*fg_folds+1,(v-1)*fg_folds+1,1,i)==255 && lett_pattn((u-1)*fg_folds+1,(v-1)*fg_folds+1,2,i)==255;
+           imag(u,v)=L;
+        end
+     end
+end
+
+
+for w=1:N;
+    for x=1:(N-K+1); 
+        amplin=0;%amplitude matrix;
+        for y=x:x+K-1;       
+            amplin=amplin+imag(w,y)*(D(12-K+y-x)/2)^b;
+        end
+    ampli(i,(w-1)*(N-K+1)+x)=k^(N-1)*amplin;
+    end
+end
+
+py=N*(N-K+1);
+
+if mod(i,N_num)>0&&i>=N_num*(n-1)+1&&i<N_num*n+1;
+ampli(i,py+1)=n;
+end
+
+if mod(i,N_num)==0;ampli(i,py+1)=n;n=n+1;end
+end
+
+amp=ampli;
+
+end
+
