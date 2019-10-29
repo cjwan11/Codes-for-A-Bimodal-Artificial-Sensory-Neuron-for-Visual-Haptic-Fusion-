@@ -1,0 +1,85 @@
+function Rec=sensory_integration_neural_computing(ampli);%t_percent means the training data percentage;index=1 for two integrated sensory network,index=2 for the nonintegrated sensory network
+
+num_first_layer=10;
+Data=ampli;
+
+
+clear c cla class f hitNum i Index input j k m maxI minI N net output s s1 s2 sx sy sz_cla t testData testInput trainData Y
+
+
+t_percent=80;%input('training percentage %\n');
+t_percent=t_percent/100;
+[sx,sy]=size(Data);
+
+cla(1)=Data(1,sy);
+k=2;
+for i=1:sx-1;
+    if Data(i,sy)~=Data(i+1,sy);
+       cla(k)=Data(i+1,sy);k=k+1;
+    end
+end
+
+sz_cla=max(size(cla));%number of labels
+
+N=sx/sz_cla;
+
+N1=round(N*t_percent);
+
+k=1;
+for i=1:sz_cla;
+    for j=1:N1;
+        trainData(k,:)=Data((i-1)*N+j,:);        
+        k=k+1;
+    end
+end
+
+k=1;
+for i=1:sz_cla;
+    for j=1:(N-N1);
+        testData(k,:)=Data((i-1)*N+N1+j-1,:);        
+        k=k+1;
+    end
+end
+f=trainData(:,1:sy-1);
+class=trainData(:,sy);
+
+t=testData(:,1:sy-1);
+c=testData(:,sy);
+[input,minI,maxI] = premnmx( f');
+[testInput,minI,maxI] = premnmx( t');
+
+
+s = length( class) ;
+output = zeros( s , 4  ) ;
+for i = 1 : s 
+   output( i , class( i )  ) = 1 ;
+end
+
+net = newff(minmax(input) , [num_first_layer sz_cla] , {'logsig' 'purelin'} , 'traingdx' ) ;
+
+net.trainparam.show = 50 ;% 显示中间结果的周期
+net.trainparam.epochs = 5000 ;%最大迭代次数（学习次数）
+net.trainparam.goal = 0.0005 ;%神经网络训练的目标误差
+net.trainParam.lr = 0.05 ;%学习速率（Learning rate）
+%开始训练
+%其中input为训练集的输入信号，对应output为训练集的输出结果
+net = train( net, input , output' ) ;
+
+Y = sim( net , testInput );
+[s1 , s2] = size( Y ) ;
+hitNum = 0 ;
+for i = 1 : s2
+    [m , Index(i)] = max( Y( : ,  i ) ) ;
+    if( Index(i)  == c(i)   ) 
+        hitNum = hitNum + 1 ; 
+    end
+end
+%sprintf('识别率是 %3.3f%%',100 * hitNum / s2 )
+
+Recong=100 * hitNum / s2;
+
+Rec_mean=mean(Recong);
+Rec_std=std(Recong);
+Rec=Recong;
+
+end
