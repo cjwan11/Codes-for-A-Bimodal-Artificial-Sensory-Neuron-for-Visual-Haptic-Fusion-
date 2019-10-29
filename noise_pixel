@@ -1,0 +1,133 @@
+%%%%%this function can generate the noise patterns (add noise pixel onto the origin 6 patterns)
+
+function noise_pixel(Patterns,Fig_name,address_1,N,N_noise,N_total,fg_folds)%address_1 is the address for storage and N_noise is the number of noise points 
+
+%%%%%%%%generate origin letters' pixels
+
+[s1,s2]=size(Patterns);
+
+for i=1:s2;
+letter_temp=ones(N,N).*255;
+
+letters=Patterns(i);
+
+[s3,s4]=size(letters{1});
+
+for j=1:s3;
+    letter_temp(letters{1}(j,1),letters{1}(j,2))=0;
+end
+
+lett_pattn(:,:,i)=letter_temp;
+
+end
+
+%%%%%%%%%%%generate three kinds of letters' pattern
+for i=1:s2;
+    %black patterns
+    lett_pattn3(:,:,1,(i-1)*3+1)=lett_pattn(:,:,i); 
+    lett_pattn3(:,:,2,(i-1)*3+1)=lett_pattn(:,:,i);
+    lett_pattn3(:,:,3,(i-1)*3+1)=lett_pattn(:,:,i);
+
+    for j=1:N;
+    for k=1:N;
+    if lett_pattn(j,k,i)==0;
+    %gray patterns (translucent patterns)
+    lett_pattn3(j,k,1,(i-1)*3+2)=127; 
+    lett_pattn3(j,k,2,(i-1)*3+2)=127;
+    lett_pattn3(j,k,3,(i-1)*3+2)=127;
+    %transparent patterns (represent by red color)    
+    lett_pattn3(j,k,1,(i-1)*3+3)=255; 
+    lett_pattn3(j,k,2,(i-1)*3+3)=0; 
+    lett_pattn3(j,k,3,(i-1)*3+3)=0;  
+
+    else
+    %gray patterns (translucent patterns)
+    lett_pattn3(j,k,1,(i-1)*3+2)=255; 
+    lett_pattn3(j,k,2,(i-1)*3+2)=255;
+    lett_pattn3(j,k,3,(i-1)*3+2)=255;
+    %transparent patterns (represent by red color)      
+    lett_pattn3(j,k,1,(i-1)*3+3)=255; 
+    lett_pattn3(j,k,2,(i-1)*3+3)=255; 
+    lett_pattn3(j,k,3,(i-1)*3+3)=255;
+    end
+    end
+    end
+end  
+
+%imshow(uint8(lett_pattn3(:,:,:,2)))
+
+
+%%%%%%%%%%generate random noise
+
+
+N_num=N_total/N_noise;%%%there are N_num figures for each kind of pattern (black,gray,red)
+
+r=randi([1 10],N_total,2);%%noise pixel's position
+r(:,3)=randi([1 3],N_total,1);%noise pixel's attribute. '1' represents 'black pixel','2' represents 'gray pixel','3' represents 'red pixel'
+
+
+for i=1:3*s2;
+    for j=1:N_num;
+    lett_pattn3_1(:,:,:,(i-1)*N_num+j)=lett_pattn3(:,:,:,i);
+    for k=1:N_noise;
+    if r((j-1)*N_noise+k,3)==1;
+       lett_pattn3_1(r(k,1),r(k,2),1,(i-1)*N_num+j)=0;
+       lett_pattn3_1(r(k,1),r(k,2),2,(i-1)*N_num+j)=0;
+       lett_pattn3_1(r(k,1),r(k,2),3,(i-1)*N_num+j)=0;
+    end
+    if r((j-1)*N_noise+k,3)==2;
+       lett_pattn3_1(r(k,1),r(k,2),1,(i-1)*N_num+j)=127;
+       lett_pattn3_1(r(k,1),r(k,2),2,(i-1)*N_num+j)=127;
+       lett_pattn3_1(r(k,1),r(k,2),3,(i-1)*N_num+j)=127;
+    end
+    if r((j-1)*N_noise+k,3)==3;
+       lett_pattn3_1(r(k,1),r(k,2),1,(i-1)*N_num+j)=255;
+       lett_pattn3_1(r(k,1),r(k,2),2,(i-1)*N_num+j)=0;
+       lett_pattn3_1(r(k,1),r(k,2),3,(i-1)*N_num+j)=0;
+    end
+    end
+    end
+end
+
+%imshow(uint8(lett_pattn3_1(:,:,:,1)))
+
+%%%%%enlarge the figures
+
+
+for i=1:3*s2*N_num;
+  for j=1:N;
+  for k=1:N;
+    for l=1:fg_folds;
+    for m=1:fg_folds;
+        lett_pattn3_large((j-1)*fg_folds+l,(k-1)*fg_folds+m,1,i)=lett_pattn3_1(j,k,1,i);
+        lett_pattn3_large((j-1)*fg_folds+l,(k-1)*fg_folds+m,2,i)=lett_pattn3_1(j,k,2,i);
+        lett_pattn3_large((j-1)*fg_folds+l,(k-1)*fg_folds+m,3,i)=lett_pattn3_1(j,k,3,i);
+    end
+    end
+   end
+   end
+end
+%imshow(uint8(lett_pattn3_large(:,:,:,1)))
+
+%%%write the figures into the target file
+
+
+for i=1:3*s2;
+
+    str2=[Fig_name{i},'_'];
+
+for j=1:N_num;
+
+    str1=address_1;
+    %str5=[address_1 'figure_data\'];
+    str3=num2str(j);
+    str4='.png';
+    addres=[str1,str2,str3,str4];
+    %addres1=[str5,str2,str3,str4];   
+    imwrite(uint8(lett_pattn3_large(:,:,:,(i-1)*N_num+j)),addres);
+    %imwrite(uint8(lett_pattn3_1(:,:,:,(i-1)*N_num+j)),addres1);
+end
+end
+
+
+end
